@@ -1,0 +1,23 @@
+dataset:
+  name: us101            # us101 | lankershim | magic
+  interval_sec: 1
+  time_is_ms: true       # ngsim raw files are ms
+  unit_ft_to_m: true	  # ngsim raw files are ft
+  filters:
+    Local_Y: {min: 50, max: 550}
+    Lane_ID: {in: [1,2,3,4,5,6]}
+
+input:
+  path: ./data/NGSIM/trajectories-0750am-0805am.csv
+
+cp:
+  mode: occlusion         # prob | occlusion
+  penetration_rate: 0.03
+  valid_range: 400
+  range: 80
+  plr: 0.0
+  seed: 100
+  time_based: true
+
+output:
+  path: ./data/NGSIM/US101_occlusion_MPR3.pkl

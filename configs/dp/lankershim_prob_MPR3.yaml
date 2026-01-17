@@ -1,0 +1,30 @@
+dataset:
+  name: lankershim       # us101 | lankershim | magic
+  interval_sec: 1
+  time_is_ms: true       # ngsim raw files are ms
+  # for lankershim only:
+  section_id: 2
+  direction: 2
+  duplicate_id_fix: {start_index: 70525, offset: 2000}
+
+input:
+  path: ./data/NGSIM/NGSIM__Lankershim_Vehicle_Trajectories.csv
+
+smoothing:
+  max_acc: 3.5
+  max_jerk: 3
+  window_length: 7
+  polyorder: 2
+  dt: 1
+
+cp:
+  mode: prob             # prob | occlusion
+  penetration_rate: 0.03
+  valid_range: 60
+  range: 80
+  plr: 0.0
+  seed: 42
+  time_based: true
+
+output:
+  path: ./data/NGSIM/Lankershim_prob_MPR3_PLR0.pkl
