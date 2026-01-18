@@ -15,9 +15,9 @@ cp:
   penetration_rate: 0.03
   valid_range: 400
   range: 80
-  plr: 0.0
+  plr: 0.2
   seed: 100
   time_based: true
 
 output:
-  path: ./data/NGSIM/US101_prob_MPR3_PLR0.pkl
+  path: ./data/NGSIM/US101_prob_MPR3_PLR20.pkl

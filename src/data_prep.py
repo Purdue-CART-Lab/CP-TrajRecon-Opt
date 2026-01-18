@@ -103,7 +103,6 @@ def traj_preprocessing_US101(df):
             
             # Remove those vehicles from df
             df = df[~df["Vehicle_ID"].isin(worst_offenders)].copy()
-            print(1)
             
         return df, removed_vehicles_history
     
@@ -236,7 +235,6 @@ def traj_preprocessing_MAGIC(df):
             
             # Remove those vehicles from df
             df = df[~df["Vehicle_ID"].isin(worst_offenders)].copy()
-            print(1)
             
         return df, removed_vehicles_history
     
@@ -345,7 +343,134 @@ def CP_data_generation(df, PR, valid_range, Range=80, PLR=0, seed=42, time_based
         df.at[idx, 'Detected'] = 1
     return df
 
-def CP_data_generation_occlusion(df: pd.DataFrame,
+def CP_data_generation_occlusion_us101(df: pd.DataFrame,
+                                PR: float,
+                                valid_range: float,
+                                Range: float = 80,
+                                PLR: float = 0.0,
+                                seed: int = 42,
+                                time_based: bool = True) -> pd.DataFrame:
+
+    random.seed(seed)
+    np.random.seed(seed)
+
+    df = df.copy()
+    df['CAV'] = 0
+    df['Detected'] = 0
+    vehs = df['Vehicle_ID'].unique()
+    travel = df.groupby('Vehicle_ID')['Local_Y'].agg(['min', 'max'])
+    travel['range_local_y'] = travel['max'] - travel['min']
+    valid_vehicles = travel[travel['range_local_y'] >= valid_range].index.tolist()
+
+    # select CAVs
+    num_cav = int(len(vehs) * PR)
+    if num_cav > 0:
+        if time_based:
+            first_app = (
+                df[df['Vehicle_ID'].isin(valid_vehicles)]
+                  .groupby('Vehicle_ID')['Global_Time']
+                  .min().reset_index(name='Min_Time')
+            )
+            first_app.sort_values('Min_Time', inplace=True)
+            step = len(valid_vehicles) / num_cav
+            picks = [int(i * step) for i in range(num_cav)]
+            CAV_list = first_app.iloc[picks]['Vehicle_ID'].tolist()
+        else:
+            CAV_list = random.sample(valid_vehicles, num_cav)
+    else:
+        CAV_list = []
+
+    # apply packet loss
+    surviving = [vid for vid in CAV_list if random.random() > PLR]
+    df.loc[df['Vehicle_ID'].isin(surviving), 'CAV'] = 1
+
+    # helper for interval subtraction
+    def subtract_intervals(intervals, rem):
+        a, b = rem
+        out = []
+        for c, d in intervals:
+            if b <= c or a >= d:
+                out.append((c, d))
+            else:
+                if a > c: out.append((c, a))
+                if b < d: out.append((b, d))
+        return out
+
+    # helper to test intersection
+    def has_intersection(intervals, rem):
+        a, b = rem
+        return any(not (d <= a or c >= b) for c, d in intervals)
+
+    # occlusion-based detection per CAV
+    for idx, cav in df[df['CAV'] == 1].iterrows():
+        t = cav['Global_Time']
+        # neighbors excluding self
+        frame = df[(df['Global_Time'] == t) & (df['Vehicle_ID'] != cav['Vehicle_ID'])].copy()
+
+        # compute offsets and distances
+        frame['dx'] = frame['Local_X'] - cav['Local_X']
+        frame['dy'] = frame['Local_Y'] - cav['Local_Y']
+        frame['distance'] = np.hypot(frame['dx'], frame['dy'])
+        frame = frame[frame['distance'] <= Range]
+
+        # quadrant labeling
+        conds = [
+            (frame['dx'] < 0) & (frame['dy'] > 0),  # Q1
+            (frame['dx'] < 0) & (frame['dy'] < 0),  # Q2
+            (frame['dx'] > 0) & (frame['dy'] < 0),  # Q3
+            (frame['dx'] > 0) & (frame['dy'] > 0),  # Q4
+        ]
+        frame['quadrant'] = np.select(conds, [1, 2, 3, 4], default=np.nan)
+
+        # vehicle half sizes
+        w2 = frame['v_Width'] / 2.0
+        l2 = frame['v_Length'] / 2.0 #'v_Length' for us101
+
+        # corner coordinates based on quadrant
+        xA1, yA1 = frame['dx'] + w2, frame['dy'] + l2
+        xA2, yA2 = frame['dx'] - w2, frame['dy'] - l2
+        xB1, yB1 = frame['dx'] - w2, frame['dy'] + l2
+        xB2, yB2 = frame['dx'] + w2, frame['dy'] - l2
+        is_A = frame['quadrant'].isin([1, 3])
+        px1 = np.where(is_A, xA1, xB1)
+        py1 = np.where(is_A, yA1, yB1)
+        px2 = np.where(is_A, xA2, xB2)
+        py2 = np.where(is_A, yA2, yB2)
+
+        # compute occlusion angles
+        ang1 = np.degrees(np.arctan2(px1, py1))
+        ang2 = np.degrees(np.arctan2(px2, py2))
+        frame['occl_min'] = (np.minimum(ang1, ang2) + 360) % 360
+        frame['occl_max'] = (np.maximum(ang1, ang2) + 360) % 360
+
+        # sort by distance
+        frame.sort_values('distance', inplace=True)
+        detectable_intervals = [(0.0, 360.0)]
+
+        # CAV always detected
+        df.at[idx, 'Detected'] = 1
+
+        # iterate neighbors
+        for _, row in frame.iterrows():
+            vid = row['Vehicle_ID']
+            lo, hi = row['occl_min'], row['occl_max']
+            occ_ints = [(lo, hi)] if lo <= hi else [(lo, 360.0), (0.0, hi)]
+
+            # check if any part is visible
+            visible = any(has_intersection(detectable_intervals, oc) for oc in occ_ints)
+
+            # set to detected if visible; never unset an already-detected vehicle
+            if visible:
+                df.loc[(df['Global_Time'] == t) & (df['Vehicle_ID'] == vid), 'Detected'] = 1
+                # subtract occluded spans
+                for oc in occ_ints:
+                    detectable_intervals = subtract_intervals(detectable_intervals, oc)
+                if not detectable_intervals:
+                    break
+
+    return df
+
+def CP_data_generation_occlusion_lankershim(df: pd.DataFrame,
                                 PR: float,
                                 valid_range: float,
                                 Range: float = 80,

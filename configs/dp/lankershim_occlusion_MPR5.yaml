@@ -18,13 +18,13 @@ smoothing:
   dt: 1
 
 cp:
-  mode: prob             # prob | occlusion
+  mode: occlusion             # prob | occlusion
   penetration_rate: 0.05
   valid_range: 60
   range: 80
-  plr: 0.2
+  plr: 0.0
   seed: 42
   time_based: true
 
 output:
-  path: ./data/NGSIM/Lankershim_prob_MPR5_PLR20.pkl
+  path: ./data/NGSIM/Lankershim_occlusion_MPR5.pkl

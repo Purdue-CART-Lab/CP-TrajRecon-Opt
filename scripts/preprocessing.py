@@ -131,14 +131,17 @@ def preprocess_us101(cfg: Dict[str, Any], df: pd.DataFrame) -> None:
 
     # 1) keep only desired sampling interval
     if time_is_ms:
-        df = df[df.Global_Time % (1000 * interval_sec) ==0]
-        df.Global_Time = df.Global_Time//1000
+        mask = (df["Global_Time"] % (1000 * interval_sec) == 0)
+        df = df.loc[mask].copy()
+        df.loc[:, "Global_Time"] = (df["Global_Time"].astype("int64") // 1000).astype("int64")
     else:
         df = df[df["Global_Time"] % interval_sec == 0]
 
     # 2) unit conversion ft -> m
     if _get(ds, "unit_ft_to_m", True):
-        df[['Local_X', 'Local_Y','Global_X', 'Global_Y', 'v_Length', 'v_Width', 'v_Vel', 'v_Acc', 'Space_Hdwy']] *= 0.3048
+        cols = ['Local_X', 'Local_Y','Global_X', 'Global_Y', 'v_Length', 'v_Width', 'v_Vel', 'v_Acc', 'Space_Hdwy']
+        cols = [c for c in cols if c in df.columns]
+        df.loc[:, cols] = df[cols].astype(float) * 0.3048
 
     # 3) optional spatial/lane filters
     df = _apply_spatial_filters(df, _get(ds, "filters", {}))
@@ -162,10 +165,26 @@ def preprocess_us101(cfg: Dict[str, Any], df: pd.DataFrame) -> None:
     if mode == "prob":
         df_CP = dp.CP_data_generation(df, PR, valid_range, Range=det_range, PLR=plr, seed=seed, time_based = time_based)
     elif mode == "occlusion":
-        df_CP = dp.CP_data_generation_occlusion(df, PR, valid_range, Range=det_range, PLR=plr, seed=seed, time_based = time_based)
+        df_CP = dp.CP_data_generation_occlusion_us101(df, PR, valid_range, Range=det_range, PLR=plr, seed=seed, time_based = time_based)
     df_dict = dp.build_complete_trajectories_dict_highway(df_CP)
     
-    # 6) save .pkl file
+    # 6) Hardcode data cleaning for us101
+    fix = df_dict[56]
+    fix = fix[fix.Vehicle_ID != 2613]
+    fix.reset_index(drop=True, inplace=True)
+    df_dict[56] = fix
+
+    fix = df_dict[19]
+    fix = fix[fix.Vehicle_ID != 986]
+    fix.reset_index(drop=True, inplace=True)
+    df_dict[19] = fix
+
+    fix = df_dict[55]
+    fix = fix[~((fix['Vehicle_ID'] == 2493) & (fix['Frame_ID'] == 7301))]
+    fix.reset_index(drop=True, inplace=True)
+    df_dict[55] = fix
+    
+    # 7) save .pkl file
     out_cfg = _require(cfg, "output")
     out_path = Path(_require(out_cfg, "path")).expanduser()
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -185,14 +204,17 @@ def preprocess_lankershim(cfg: Dict[str, Any], df: pd.DataFrame) -> None:
 
     # 1) keep only desired sampling interval
     if time_is_ms:
-        df = df[df.Global_Time % (1000 * interval_sec) ==0]
-        df.Global_Time = df.Global_Time//1000
+        mask = (df["Global_Time"] % (1000 * interval_sec) == 0)
+        df = df.loc[mask].copy()
+        df.loc[:, "Global_Time"] = (df["Global_Time"].astype("int64") // 1000).astype("int64")
     else:
         df = df[df['Global_Time'] % interval_sec == 0]
 
     # 2) unit conversion ft -> m
     if _get(ds, "unit_ft_to_m", True):
-        df[['Local_X', 'Local_Y','Global_X', 'Global_Y', 'v_Length', 'v_Width', 'v_Vel', 'v_Acc', 'Space_Hdwy']] *= 0.3048
+        cols = ["Local_X","Local_Y","Global_X","Global_Y","v_length","v_Width","v_Vel","v_Acc","Space_Hdwy"]
+        cols = [c for c in cols if c in df.columns]
+        df.loc[:, cols] = df[cols].astype(float) * 0.3048
     
     df.reset_index(drop=True, inplace=True)
     
@@ -208,11 +230,11 @@ def preprocess_lankershim(cfg: Dict[str, Any], df: pd.DataFrame) -> None:
     df_2_2 = dp.traj_preprocessing_Lankershim(df, section_id, direction)
     
     smoothing = _require(cfg, "smoothing")
-    max_acc = str(_get(smoothing, "max_acc", 3.5))
-    max_jerk = str(_get(smoothing, "max_jerk", 3))
-    window_length = str(_get(smoothing, "window_length", 7))
-    polyorder = str(_get(smoothing, "polyorder", 2))
-    dt = str(_get(smoothing, "dt", 1))
+    max_acc = float(_get(smoothing, "max_acc", 3.5))
+    max_jerk = float(_get(smoothing, "max_jerk", 3))
+    window_length = int(_get(smoothing, "window_length", 7))
+    polyorder = int(_get(smoothing, "polyorder", 2))
+    dt = float(_get(smoothing, "dt", 1))
     
     df_2_2 = dp.smooth_trajectories(
         df_2_2,
@@ -231,7 +253,7 @@ def preprocess_lankershim(cfg: Dict[str, Any], df: pd.DataFrame) -> None:
     # 5) CP data generation
     cp = _require(cfg, "cp")
 
-    mode = float(_get(cp, "mode", "prob")).lower()  # "prob" | "occlusion"
+    mode = str(_get(cp, "mode", "prob")).lower()  # "prob" | "occlusion"
     PR = float(_require(cp, "penetration_rate"))
     valid_range = float(_require(cp, "valid_range"))
     det_range = float(_get(cp, "range", 80))
@@ -242,10 +264,47 @@ def preprocess_lankershim(cfg: Dict[str, Any], df: pd.DataFrame) -> None:
     if mode == "prob":
         df_2_2_CP = dp.CP_data_generation(df_2_2, PR, valid_range, Range=det_range, PLR=plr, seed=seed, time_based = time_based)
     elif mode == "occlusion":
-        df_2_2_CP = dp.CP_data_generation_occlusion(df_2_2, PR, valid_range, Range=det_range, PLR=plr, seed=seed, time_based = time_based)
+        df_2_2_CP = dp.CP_data_generation_occlusion_lankershim(df_2_2, PR, valid_range, Range=det_range, PLR=plr, seed=seed, time_based = time_based)
     df_2_2_dict = dp.build_complete_trajectories_dict_intersection(df_2_2_CP)
     
-    # 6) save .pkl file
+    # 6) Hardcode data cleaning for lankershim
+    fix = df_2_2_dict[1]
+    fix.at[781, 'Lane_ID'] = 4
+    df_2_2_dict[1] = fix
+
+    fix = df_2_2_dict[4]
+    fix.at[3635, 'Lane_ID'] = 4
+    fix.at[3654, 'Lane_ID'] = 4
+    fix.at[3779, 'Lane_ID'] = 4
+    fix.at[3789, 'Lane_ID'] = 2
+    fix.at[3586, 'Lane_ID'] = 3
+    df_2_2_dict[4] = fix
+
+    fix = df_2_2_dict[8]
+    fix.at[8553, 'Lane_ID'] = 4
+    df_2_2_dict[8] = fix
+
+    fix = df_2_2_dict[9]
+    fix.at[9649, 'Lane_ID'] = 1
+    fix.at[8936, 'Lane_ID'] = 1
+    fix.at[9452, 'Lane_ID'] = 3
+    df_2_2_dict[9] = fix
+
+    fix = df_2_2_dict[11]
+    fix = fix[fix.Vehicle_ID != 1421]
+    fix = fix[fix.Vehicle_ID != 1418]
+    fix = fix[fix.Vehicle_ID != 2048]
+    fix.reset_index(drop=True, inplace=True)
+    df_2_2_dict[11] = fix
+
+    fix = df_2_2_dict[13]
+    fix = fix[~((fix['Vehicle_ID'] == 2376) & (fix['Frame_ID'] == 2261))]
+    fix = fix[~((fix['Vehicle_ID'] == 2376) & (fix['Frame_ID'] == 2271))]
+    fix = fix[~((fix['Vehicle_ID'] == 2376) & (fix['Frame_ID'] == 2281))]
+    fix.reset_index(drop=True, inplace=True)
+    df_2_2_dict[13] = fix
+    
+    # 7) save .pkl file
     out_cfg = _require(cfg, "output")
     out_path = Path(_require(out_cfg, "path")).expanduser()
     out_path.parent.mkdir(parents=True, exist_ok=True)
