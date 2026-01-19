@@ -1,0 +1,31 @@
+# ============================
+# I/O configuration
+# ============================
+io:
+  pkl_path: ./data/NGSIM/US101_prob_MPR3_PLR0.pkl
+  output_root: ./results/
+  experiment_name: us101_prob_MPR3_PLR0
+  experiment_id: exp_0
+
+
+# ============================
+# Optimization parameters
+# ============================
+weights:
+  error_weight: 10
+  x_weight: 0.00005
+  a_weight: 0.1
+  abslc_weight: 5
+  mobil_weight: 0.05
+  jerk_weight: 2
+
+bounds:
+  speed_limit: 31.29        # m/s
+  a_low: -3.5
+  a_high: 3.5
+  jerk_low: -3
+  jerk_high: 3
+
+others:
+  rc_time: 0.3              # reaction time (s)
+  M: 10000                  # Big-M constant

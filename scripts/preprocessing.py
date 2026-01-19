@@ -374,8 +374,6 @@ def run_from_config(cfg: Dict[str, Any]) -> Path:
         df = preprocess_us101(cfg, df)
     elif ds_name == "lankershim":
         df = preprocess_lankershim(cfg, df)
-    #elif ds_name == "magic":
-    #    df = preprocess_magic(cfg, df)
     else:
         raise ValueError(f"dataset.name must be 'us101' or 'lankershim', got: {ds_name}") # 'magic'
 
