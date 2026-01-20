@@ -1,0 +1,103 @@
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# ================================
+# Virtual environments
+# ================================
+venv/
+.venv/
+env/
+.conda/
+conda-env/
+
+# ================================
+# IDE / Editor
+# ================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# ================================
+# OS-specific
+# ================================
+.DS_Store
+Thumbs.db
+
+# ================================
+# Jupyter
+# ================================
+.ipynb_checkpoints/
+
+# ================================
+# Data (raw & processed)
+# ================================
+data/
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.parquet
+*.csv
+*.npz
+
+# ================================
+# Results / Outputs
+# ================================
+results/
+outputs/
+logs/
+figures/
+plots/
+
+# ================================
+# Optimization artifacts
+# ================================
+*.lp
+*.mps
+*.sol
+*.log
+*.out
+
+# ================================
+# Temporary / Cache
+# ================================
+.cache/
+tmp/
+temp/
+
+# ================================
+# Experiment artifacts
+# ================================
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
+*.gif
+
+# ================================
+# YAML / configs (optional)
+# ================================
+# Uncomment if you do NOT want to commit configs
+# configs/local/
+# configs/**/local*.yaml
+
+# ================================
+# Security / Secrets
+# ================================
+.env
+*.key
+*.pem
