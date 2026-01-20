@@ -1,0 +1,74 @@
+# ==========================================================
+# Optimization configuration (Pyomo MILP / integrated optimization)
+# ==========================================================
+
+# ============================
+# I/O configuration
+# ============================
+io:
+  # Which dataset this optimization run corresponds to.
+  # Used mainly for bookkeeping and any dataset-specific logic in scripts.
+  dataset_name: us101       # us101 | lankershim
+
+  # Path to the preprocessed trajectory dictionary (.pkl) produced by preprocessing.py
+  # This file is generated under data preparation configs (configs/dp/*.yaml).
+  pkl_path: ./data/NGSIM/US101_prob_MPR3_PLR0.pkl
+
+  # Root folder for all outputs from this optimization run (CSV results, plots, logs).
+  # Recommended: keep this gitignored (e.g., results/).
+  output_root: ./results/
+
+  # Experiment name (folder name under output_root).
+  # Good practice: encode dataset + CP mode + MPR/PLR in the name for reproducibility.
+  experiment_name: us101_prob_MPR3_PLR0
+
+  # Experiment ID (sub-folder or run identifier).
+  # Use this to distinguish multiple runs with different weights/bounds/solver settings.
+  # Examples: exp_1, 2026-01-17, tuned_w10, ablation_nojerk, etc.
+  experiment_id: exp_1
+
+
+# ============================
+# Optimization parameters
+# ============================
+weights:
+  # Weight for position difference in the objective function.
+  error_weight: 10
+
+  # Weight for the summation of distance to the starting point for all vehicles in the objective function
+  x_weight: 0.00005
+
+  # Weight for the summation of absolute acceleration for all vehicles in the objective function
+  a_weight: 0.1
+
+  # Weight for the summation of the number of lane changes for all vehicles in the objective function
+  abslc_weight: 5
+
+  # Weight for the summation of absolute jerk during LC for all vehicles in the objective function
+  mobil_weight: 0.05
+
+  # Weight for the summation of absolute jerk for all vehicles in the objective function
+  jerk_weight: 2
+
+
+bounds:
+  # Upper bound on speed (m/s).
+  # Set based on road speed limit.
+  speed_limit: 31.29        # m/s
+
+  # Acceleration bounds (m/s^2).
+  a_low: -3.5
+  a_high: 3.5
+
+  # Jerk bounds (m/s^3).
+  jerk_low: -3
+  jerk_high: 3
+
+
+others:
+  # Reaction time (seconds) used in car-following / safety constraints.
+  rc_time: 0.3              # s
+
+  # Big-M constant used in mixed-integer constraints.
+  M: 10000
+

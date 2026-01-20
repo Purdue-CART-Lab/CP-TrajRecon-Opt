@@ -1,0 +1,109 @@
+# ==========================================================
+# Dataset and preprocessing settings
+# ==========================================================
+dataset:
+  # Dataset/site identifier
+  # - us101       : NGSIM US-101 freeway dataset
+  # - lankershim  : NGSIM Lankershim Boulevard arterial dataset
+  name: lankershim       # us101 | lankershim
+
+  # Desired temporal resolution after preprocessing (seconds)
+  # interval_sec = 1 keeps one record per second per vehicle
+  interval_sec: 1
+
+  # Whether the raw Global_Time column is stored in milliseconds
+  # - true  : convert milliseconds → seconds
+  # - false : already in seconds
+  time_is_ms: true       # NGSIM raw files are in milliseconds
+
+  # ----------------------------------------------------------
+  # Lankershim-specific settings
+  # ----------------------------------------------------------
+
+  # Section identifier used to select the intersection segment
+  # (Defined by the NGSIM Lankershim dataset documentation)
+  section_id: 2
+
+  # Travel direction identifier
+  # Typically:
+  # - 1: northbound / eastbound
+  # - 2: southbound / westbound
+  # (Exact meaning follows the NGSIM definition)
+  direction: 2
+
+  # Fix for duplicated vehicle IDs in the raw Lankershim dataset
+  # Vehicles with index >= start_index will have their IDs
+  # increased by the specified offset to ensure uniqueness
+  duplicate_id_fix:
+    start_index: 70525
+    offset: 2000
+
+# ==========================================================
+# Input file
+# ==========================================================
+input:
+  # Path to the raw trajectory CSV file
+  path: ./data/NGSIM/NGSIM__Lankershim_Vehicle_Trajectories.csv
+
+# ==========================================================
+# (Optional) Trajectory smoothing settings
+# ==========================================================
+smoothing:
+  # Maximum physically plausible acceleration (m/s^2)
+  # Used to detect and smooth abnormal acceleration spikes
+  max_acc: 3.5
+
+  # Maximum jerk (rate of change of acceleration, m/s^3)
+  # Controls how aggressively sharp acceleration changes are smoothed
+  max_jerk: 3
+
+  # Window length for Savitzky–Golay smoothing filter
+  # Must be an odd integer
+  window_length: 7
+
+  # Polynomial order used in the Savitzky–Golay filter
+  polyorder: 2
+
+  # Time step (seconds) used in smoothing
+  # Should match interval_sec above
+  dt: 1
+
+# ==========================================================
+# Cooperative perception (CP) simulation settings
+# ==========================================================
+cp:
+  # CP detection model
+  # - prob       : probabilistic detection based on true positive rates (TPRs)
+  # - occlusion  : occlusion-aware detection model
+  mode: prob              # prob | occlusion
+
+  # Market penetration rate (MPR) of connected and automated vehicles (CAVs)
+  # Example: 0.03 = 3% of vehicles are CAVs
+  penetration_rate: 0.03
+
+  # Vehicles with travel distance shorter than this range are excluded from CAV selection
+  valid_range: 60
+
+  # Detection/sensing range of sensors (meters)
+  range: 80
+
+  # Packet loss rate (PLR) for V2X communication
+  # 0.0 means no communication loss
+  plr: 0.0
+
+  # Random seed for reproducibility
+  seed: 42
+
+  # Whether CP detection is sampled based on time steps
+  # - true  : time-based sampling
+  # - false : record-based sampling
+  time_based: true
+
+# ==========================================================
+# Output
+# ==========================================================
+output:
+  # Path to the output pickle (.pkl) file
+  # Stores generated CP dataset composed of planning horizons for downstream optimization
+  path: ./data/NGSIM/Lankershim_prob_MPR3_PLR0.pkl
+

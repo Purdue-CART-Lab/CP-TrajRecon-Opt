@@ -1,0 +1,32 @@
+# ============================
+# I/O configuration
+# ============================
+io:
+  dataset_name: lankershim   # us101 | lankershim
+  pkl_path: ./data/NGSIM/Lankershim_occlusion_MPR5.pkl
+  output_root: ./results/
+  experiment_name: lankershim_occlusion_MPR5
+  experiment_id: exp_0
+
+
+# ============================
+# Optimization parameters
+# ============================
+weights:
+  error_weight: 100
+  x_weight: 0.00005
+  a_weight: 0.1
+  abslc_weight: 5
+  mobil_weight: 0.0005
+  jerk_weight: 2
+
+bounds:
+  speed_limit: 18           # m/s
+  a_low: -3.5
+  a_high: 3.5
+  jerk_low: -3
+  jerk_high: 3
+
+others:
+  rc_time: 0.0              # reaction time varies for different planning horizons in lankershim, thus hard coded in src/MILP_lankershim.py
+  M: 10000                  # Big-M constant
