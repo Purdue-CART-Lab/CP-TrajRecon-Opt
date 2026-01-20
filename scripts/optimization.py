@@ -12,6 +12,13 @@ from pathlib import Path
 import sys
 import yaml
 
+# --- Make sure repo root is importable ---
+# If this script is in scripts/, repo root is parent of scripts/
+repo_root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(repo_root))
+from src.MILP_us101 import optimization_us101 as opt_us101
+from src.MILP_lankershim import optimization_lankershim as opt_lksm
+
 def load_yaml(path: Path) -> dict:
     with open(path, "r") as f:
         return yaml.safe_load(f)
@@ -30,14 +37,6 @@ def main():
         raise FileNotFoundError(f"Config not found: {cfg_path}")
 
     cfg = load_yaml(cfg_path)
-
-    # --- Make sure repo root is importable ---
-    # If this script is in scripts/, repo root is parent of scripts/
-    repo_root = Path(__file__).resolve().parents[1]
-    sys.path.insert(0, str(repo_root))
-
-    # Import optimization entry
-    from src.MILP_us101 import optimization
     
     io = cfg["io"]
     pkl_path = Path(io["pkl_path"]).expanduser()
@@ -46,14 +45,24 @@ def main():
 
     df_dict = load_pkl(pkl_path)
     print(f"[INFO] Loaded pkl: {pkl_path}")
-
-    for i in range(1, len(df_dict) + 1):
-        try:
-            optimization(df_dict, case_index=i, cfg=cfg)
-        except Exception as e:
-            print(f"[ERROR] case_index={i}: {e}")
-            # continue to next
-            continue
+    
+    dataset_name = io["dataset_name"]
+    if dataset_name == "us101":
+        for i in range(1, len(df_dict) + 1):
+            try:
+                opt_us101(df_dict, case_index=i, cfg=cfg)
+            except Exception as e:
+                print(f"[ERROR] case_index={i}: {e}")
+                # continue to next
+                continue
+    elif dataset_name == "lankershim":
+        for i in range(1, len(df_dict) + 1):
+            try:
+                opt_lksm(df_dict, case_index=i, cfg=cfg)
+            except Exception as e:
+                print(f"[ERROR] case_index={i}: {e}")
+                # continue to next
+                continue
 
     print("[DONE] All requested cases processed.")
 

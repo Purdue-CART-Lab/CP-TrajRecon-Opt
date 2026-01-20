@@ -304,6 +304,8 @@ def preprocess_lankershim(cfg: Dict[str, Any], df: pd.DataFrame) -> None:
     fix.reset_index(drop=True, inplace=True)
     df_2_2_dict[13] = fix
     
+    df_2_2_dict.pop(19, None)
+    
     # 7) save .pkl file
     out_cfg = _require(cfg, "output")
     out_path = Path(_require(out_cfg, "path")).expanduser()
@@ -313,42 +315,6 @@ def preprocess_lankershim(cfg: Dict[str, Any], df: pd.DataFrame) -> None:
         pickle.dump(df_2_2_dict, f)
     
     return None
-
-'''
-def preprocess_magic(cfg: Dict[str, Any], df: pd.DataFrame) -> pd.DataFrame:
-    ds = _require(cfg, "dataset")
-
-    time_col = _get(ds, "time_col", "Global_Time")
-    interval_sec = _get(ds, "interval_sec", 1)
-
-    # MAGIC script used: df[df['Global_Time'] % 1 == 0]
-    df = _filter_by_mod(df, time_col, float(interval_sec))
-    df = df.reset_index(drop=True)
-
-    # Optional rename / ensure columns
-    df = _safe_rename_columns(df, _get(ds, "rename_columns", {}))
-    df = _ensure_columns(
-        df,
-        aliases={
-            "v_length": ["v_length", "v_Length"],
-            "v_Width": ["v_Width", "v_width"],
-        },
-    )
-
-    # Optional recompute v_Vel/v_Acc from Local_Y
-    if bool(_get(ds, "recalc_speed_acc", False)) and hasattr(dp, "recalc_speed_acc"):
-        df = dp.recalc_speed_acc(
-            df,
-            id_col=_get(ds, "id_col", "Vehicle_ID"),
-            time_col=time_col,
-            pos_col=_get(ds, "pos_col", "Local_Y"),
-        )
-
-    df = dp.traj_preprocessing_MAGIC(df)
-    df_CP = dp.CP_data_generation(traj_101, 0.03, 400, Range=80, PLR=0.8, seed=100)
-    
-    return df.reset_index(drop=True)
-'''
 
 def save_pkl(cfg: Dict[str, Any], obj: Any) -> Path:
     out_cfg = _require(cfg, "output")
