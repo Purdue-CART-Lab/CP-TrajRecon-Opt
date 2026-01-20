@@ -9,27 +9,26 @@ The proposed vehicle trajectory reconstruction pipeline consists of **three main
 
 1. **Data Preparation**: This module first **uniformly samples Connected and Automated Vehicles (CAVs)** according to a predefined **market penetration rate (MPR)** over the selected trajectory dataset. It then generates CAV observations using one of the following perception models:
 
-- a **distance-dependent True Positive Rate (TPR)** model, or  
-- an **occlusion-aware detection model** based on  
-  https://doi.org/10.1080/15472450.2024.2307031.
+    - a **distance-dependent True Positive Rate (TPR)** model, or  
+    - an **occlusion-aware detection model** from https://doi.org/10.1080/15472450.2024.2307031.
 
-Finally, the processed trajectories are organized into a dictionary covering all planning horizons and saved as a `.pkl` file in the `./data` directory.
+    Finally, the processed trajectories are organized into a dictionary covering all planning horizons and saved as a `.pkl` file in the `./data` directory.
 
 2. **Optimization**: This module takes the generated `.pkl` file as input and formulates a **Mixed-Integer Linear Programming (MILP)** problem to reconstruct full vehicle trajectories from partial CAV observations.
 
-The reconstruction results are exported as:
-- **CSV files** (numerical results), and
-- **figures** (trajectory visualizations),
+    The reconstruction results are exported as:
+    - **CSV files** (numerical results), and
+    - **figures** (trajectory visualizations),
 
-all of which are saved in the `./results` directory.
+    all of which are saved in the `./results` directory.
 
 3. **Evaluation**: Based on the reconstructed trajectory CSV files, this module evaluates reconstruction performance using **five metrics**:
 
-- **MAE_x**: Mean Absolute Error of longitudinal position  
-- **MAPE_x**: Mean Absolute Percentage Error of longitudinal position  
-- **RMSE_x**: Root Mean Square Error of longitudinal position  
-- **MAE_k**: Mean Absolute Error of lane index  
-- **MAE_LC**: Mean Absolute Error of lane-change timing  
+    - **MAE_x**: Mean Absolute Error of longitudinal position  
+    - **MAPE_x**: Mean Absolute Percentage Error of longitudinal position  
+    - **RMSE_x**: Root Mean Square Error of longitudinal position  
+    - **MAE_k**: Mean Absolute Error of lane index  
+    - **MAE_LC**: Mean Absolute Error of lane-change timing  
 
 ---
 
@@ -108,12 +107,10 @@ Download the following ZIP files from the USDOT NGSIM dataset page:
 - **Lankershim-Boulevard-LosAngeles-CA.zip**
 - **US-101-LosAngeles-CA.zip**
 
-:contentReference[oaicite:1]{index=1}
-
 Extract both ZIP files. For the US-101 package, also extract the nested ZIP:
 - `US-101-LosAngeles-CA/us-101-vehicle-trajectory-data.zip`
 
-Then place the following CSVs into `./data/NGSIM/`:
+Then place the following CSVs into `./data/NGSIM/` (create the folder beforehand):
 - `NGSIM__Lankershim_Vehicle_Trajectories.csv` (under `Lankershim-Boulevard-LosAngeles-CA/`)
 - `trajectories-0750am-0805am.csv` (under `US-101-LosAngeles-CA/us-101-vehicle-trajectory-data/vehicle-trajectory-data/0750am-0805am/`)
 
@@ -129,27 +126,27 @@ data/NGSIM/
 Process raw trajectory CSVs into PKL files for downstream optimization. Preprocessing behavior is controlled by YAML configs in **configs/dp/**. Please check **configs/dp/template.yaml** for configuration details.
 
 Example:
-```bash
-   python scripts/preprocessing.py --config configs/dp/template.yaml
-```
+    ```bash
+   python scripts/preprocessing.py --config configs/dp/us101_prob_MPR3.yaml
+    ```
 
 ### 3. Optimization
 
 Generate trajectory reconstruction results using MILP. Optimization behavior is controlled by YAML configs in **configs/opt/**. Please check **configs/opt/template.yaml** for configuration details.
 
 Example:
-```bash
-   python scripts/optimization.py --config configs/opt/template.yaml
-```
+    ```bash
+   python scripts/optimization.py --config configs/opt/us101_prob_MPR3_PLR0.yaml
+    ```
 
 ### 4. Evaluation
 
 Evaluate the trajecytory reconstruction results by comparing to the ground truth. The same YAML configs in **configs/opt/** are used to control the evaluation.
 
 Example:
-```bash
-   python scripts/evaluation.py --config configs/opt/template.yaml
-```
+    ```bash
+   python scripts/evaluation.py --config configs/opt/us101_prob_MPR3_PLR0.yaml
+    ```
 
 ## Citing This Work
 

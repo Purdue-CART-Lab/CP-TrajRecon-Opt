@@ -332,7 +332,7 @@ def optimization_us101(
     cfg,
 ):
     
-    print('Case '+str(case_index)+' starts!')
+    print('[INFO] Planning horizon '+str(case_index)+' starts.')
     
     io = cfg["io"]
     output_root = io["output_root"]
