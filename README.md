@@ -74,7 +74,9 @@ CP-TrajRecon-Opt/
 3. **Install Required Packages**:
     ```bash
     pip install -r requirements.txt
-    # or, for exact replication of our experimental environment:
+    ```
+    or, for exact replication of our experimental environment:
+    ```bash
     pip install -r requirements.lock.txt
     ```
 
