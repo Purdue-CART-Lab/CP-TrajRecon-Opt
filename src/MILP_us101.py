@@ -15,6 +15,11 @@ import pyomo.environ as pyo
 import os
 from collections import defaultdict
 from typing import Any, Dict
+
+# Silence pyomo warning
+import logging
+logging.getLogger("pyomo.core").setLevel(logging.CRITICAL)
+logging.getLogger("pyomo").setLevel(logging.CRITICAL)
         
 def Preparation_for_optimization_indexed(all_veh_input, interval = 1):
     
@@ -319,8 +324,9 @@ def replay_results_complete(df_dict, output_root, exp_name, case_index, exp_id):
         plt.legend(loc='lower right')
         plt.grid(True)
         plt.savefig(output_root+exp_name+'/'+str(case_index)+'/'+exp_id+'/'+str(l)+'.png')
+        plt.close()
     
-def optimization(
+def optimization_us101(
     df_dict,
     case_index,
     cfg,
@@ -366,7 +372,7 @@ def optimization(
     model.T = RangeSet(0, T-1)  # Time steps
     
     # Variables: acceleration of vehicle v at time t
-    '''
+    
     model.a = Var(model.V, model.T, domain=Reals)
     # Absolute value of a
     model.abs_a = Var(model.V, model.T, domain=NonNegativeReals)
@@ -461,7 +467,7 @@ def optimization(
     # Auxiliary variables
     model.u = Var(model.V, model.T, domain=NonNegativeReals, initialize=0.0)
     model.w = Var(model.V, model.T, domain=NonNegativeReals, initialize=0.0)
-
+    '''
     # Objective function
     def objective_rule(model):
         return (
