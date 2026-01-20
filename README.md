@@ -51,7 +51,7 @@ Based on the reconstructed trajectory CSV files, this module evaluates reconstru
 
 ---
 
-## Repository Structure (Typical)
+## Repository Structure
 
 ```text
 CP-TrajRecon-Opt/
@@ -65,6 +65,7 @@ CP-TrajRecon-Opt/
 ├─ requirements.txt
 ├─ requirements.lock.txt
 └─ README.md
+```
 
 ## Installation
 
@@ -108,6 +109,12 @@ CP-TrajRecon-Opt/
    ```
 > **Note:** Please ensure the Gurobi solver is accessible in your system PATH before running the optimization module.
 
+## Usage Examples
+
+**Create YAML: **
+```bash
+python 
+```
 
 
 ## Citing This Work
