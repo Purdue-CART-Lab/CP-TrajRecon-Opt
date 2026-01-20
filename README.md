@@ -126,27 +126,27 @@ data/NGSIM/
 Process raw trajectory CSVs into PKL files for downstream optimization. Preprocessing behavior is controlled by YAML configs in **configs/dp/**. Please check **configs/dp/template.yaml** for configuration details.
 
 Example:
-    ```bash
-   python scripts/preprocessing.py --config configs/dp/us101_prob_MPR3.yaml
-    ```
+```bash
+python scripts/preprocessing.py --config configs/dp/us101_prob_MPR3.yaml
+```
 
 ### 3. Optimization
 
 Generate trajectory reconstruction results using MILP. Optimization behavior is controlled by YAML configs in **configs/opt/**. Please check **configs/opt/template.yaml** for configuration details.
 
 Example:
-    ```bash
-   python scripts/optimization.py --config configs/opt/us101_prob_MPR3_PLR0.yaml
-    ```
+```bash
+python scripts/optimization.py --config configs/opt/us101_prob_MPR3_PLR0.yaml
+```
 
 ### 4. Evaluation
 
 Evaluate the trajecytory reconstruction results by comparing to the ground truth. The same YAML configs in **configs/opt/** are used to control the evaluation.
 
 Example:
-    ```bash
-   python scripts/evaluation.py --config configs/opt/us101_prob_MPR3_PLR0.yaml
-    ```
+```bash
+python scripts/evaluation.py --config configs/opt/us101_prob_MPR3_PLR0.yaml
+```
 
 ## Citing This Work
 
