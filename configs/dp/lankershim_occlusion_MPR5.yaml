@@ -1,5 +1,5 @@
 dataset:
-  name: lankershim       # us101 | lankershim | magic
+  name: lankershim       # us101 | lankershim
   interval_sec: 1
   time_is_ms: true       # ngsim raw files are ms
   # for lankershim only:

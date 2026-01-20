@@ -2,7 +2,7 @@
 # I/O configuration
 # ============================
 io:
-  dataset_name: us101       # us101 | lankershim | magic
+  dataset_name: us101       # us101 | lankershim
   pkl_path: ./data/NGSIM/US101_prob_MPR3_PLR0.pkl
   output_root: ./results/
   experiment_name: us101_prob_MPR3_PLR0
